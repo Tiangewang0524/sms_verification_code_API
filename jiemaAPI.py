@@ -6,7 +6,8 @@ import win32clipboard as w
 import tkinter
 import tkinter.messagebox
 import time
-import phone
+import json
+# import phone
 
 # 用户名
 # 密码
@@ -155,10 +156,12 @@ def first():
             phone_num = getNumber(Token, sid)
 
             check(phone_num)
-            print('给您提供的手机号为:{0}'.format(phone_num))
 
-            info = phone.Phone().find(phone_num)
-            print(info)
+            # 检查运营商信息
+            temp_url = 'http://mobsec-dianhua.baidu.com/dianhua_api/open/location?tel=' + str(phone_num)
+            html_info = requests.get(temp_url).text
+            operator_info = json.loads(html_info)['response'][phone_num]['location']
+            print('给您提供的手机号为:{0}, 运营商为:{1}'.format(phone_num, operator_info))
 
             # 获取用户信息
             getSummary(Token)
