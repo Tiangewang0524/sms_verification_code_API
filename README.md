@@ -23,7 +23,8 @@
 
 
 
-prerequisite:
+ 
+## prerequisite:
 
 pip install win32gui win32con win32clipboard tkinter json
 
