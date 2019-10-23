@@ -1,6 +1,11 @@
 # 短信验证码接收API
 
+1.1
 
+修正了不能显示运营商的bug
+
+
+1.0
 
 多平台，代替客户端使用。
 
@@ -20,5 +25,7 @@
 
 prerequisite:
 
-pip install win32gui win32con win32clipboard tkinter phone
+pip install win32gui win32con win32clipboard tkinter json
+
+原phone package因不准确不再使用
  
