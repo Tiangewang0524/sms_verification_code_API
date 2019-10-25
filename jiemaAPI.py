@@ -3,10 +3,12 @@ import hashlib
 import win32gui
 import win32con
 import win32clipboard as w
-import tkinter
+import tkinter as tk
 import tkinter.messagebox
 import time
 import json
+import threading
+
 # import phone
 
 # 用户名
@@ -15,6 +17,10 @@ import json
 user_name = "qa******"
 password = "qw******"
 sid = "70122"
+ph_num = ''
+msg_info = ''
+text1 = ''
+
 hl = hashlib.md5()
 hl.update(password.encode(encoding='utf-8'))
 
@@ -47,7 +53,6 @@ def getNumber(Token, sid):
         5.2 locationLevel=p(省份) 或 locationLevel=c(城市)
         5.3 location=(要包含或排除的省份或城市,该值对应locationLevel)
         5.4 locationMatching、locationLevel、location三个必须一起使用。用来指定取某些区域的手机号或者不要某些区域的手机号
-
     特别注意:
     locationMatching的参数值只能是include或者exclude中的一个。
     include指的是包含区域，exclude指的是不包含区域
@@ -124,50 +129,70 @@ def getSummary(Token):
 
 # 获取验证码
 def getMessage(Token, sid, phone_num, user_name):
+    global text1
     url = "http://api.sfoxer.com/api/do.php?action=getMessage&token={0}&sid={1}&phone={2}".format(Token, sid, phone_num)
     res = requests.get(url)
     i = 1
     while res.text.split("|")[1] == '还没有接收到短信，请过3秒再试':
-        print('正在获取短信中，第{}次尝试'.format(i))
+        msg_get_info = '正在获取短信中，第' + str(i) + '次尝试'
+        print(msg_get_info)
         i += 1
-        time.sleep(3)
         res = requests.get(url)
+        text1.insert(tk.END, msg_get_info)
+        text1.insert(tk.END, '\n')
+        time.sleep(3)
+        text1.delete(2.0, 3.0)
     else:
-        print('接收到验证码, 验证码为{}'.format(res.text.split("|")[1]))
+        if res.text.split("|")[0] == '0':
+            print(res.text.split("|")[1])
+        else:
+            print('接收到验证码, 验证码为{}'.format(res.text.split("|")[1]))
+
+    return res.text.split("|")[1]
 
 
 # 用户窗口
 def first():
-    top = tkinter.Tk()
-    top.geometry("1000x500")
-    top.title("接码")
+    top = tk.Tk()
+    top.geometry("900x600")
+    top.title("阿里鸽鸽 version 1.2 beta版")
     phone_num = 0
     # 用户登录接码码 返回值token
     Token = loginIn()
+    # 设置
+    sem = threading.Semaphore(1)
+    global text1
 
     def helloCallBack():
+        global ph_num, msg_info
         a = 1
-        # 如需获取多个手机号 请将循环条件改为 a < 要获取的手机号数量+1
+        # # 如需获取多个手机号 请将循环条件改为 a < 要获取的手机号数量+1
         while a < 2:
             time.sleep(1)
             # 用户登录接码码 返回值token
             # Token = loginIn()
             # 取手机号  return 手机号
             phone_num = getNumber(Token, sid)
-
-            check(phone_num)
+            ph_num = phone_num
+            text2.insert(tk.END, ph_num)
+            text2.insert(tk.END, '\n')
+            # check(phone_num)
 
             # 检查运营商信息
             temp_url = 'http://mobsec-dianhua.baidu.com/dianhua_api/open/location?tel=' + str(phone_num)
             html_info = requests.get(temp_url).text
             operator_info = json.loads(html_info)['response'][phone_num]['location']
             print('给您提供的手机号为:{0}, 运营商为:{1}'.format(phone_num, operator_info))
+            text2.insert(tk.END, operator_info)
 
             # 获取用户信息
             getSummary(Token)
 
             # 获取验证码
-            getMessage(Token, sid, phone_num, user_name)
+            msg_info = getMessage(Token, sid, ph_num, user_name)
+            if msg_info:
+                text1.insert(tk.END, msg_info)
+                text1.update()
             # if code:
             #     print("验证码：", code)
             a = a + 1
@@ -182,11 +207,48 @@ def first():
         else:
             print(o_code[1])
 
-    B = tkinter.Button(top, text="憨憨，准备接码！！！", command=helloCallBack, width=30, height=15, bg="yellow")
-    B.pack()
+    def thread_it(func, *args):
+        '''将函数打包进线程'''
 
-    b2 = tkinter.Button(top, text="憨憨，释放手机号吗？？？", command=release, width=30, height=15, bg="blue")
-    b2.pack()
+        def gothread():
+            sem.acquire()
+            # print(threading.current_thread().name)
+            func()
+
+        # 创建
+        t = threading.Thread(target=gothread, args=args)
+        # 守护 !!!
+        t.setDaemon(True)
+        # 启动
+        t.start()
+        # 阻塞--卡死界面！
+        # t.join()
+
+    # Frame
+    fm1 = tk.Frame(top, bg='black')
+    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 1.2版", font=('微软雅黑', 40), fg="white", bg='black')
+    fm1.titleLabel.pack()
+    fm1.pack(side=tk.TOP, expand=tk.YES, fill='x', pady=5)
+
+    # Grid
+    a = tk.Frame(top, height=50, width=200)
+    a.pack(side='top', fill='both', expand=True, padx=100)
+    button1 = tk.Button(a, text="憨憨，准备接码！！！", command=lambda: thread_it(helloCallBack), font=('微软雅黑', 12),
+                        width=20, height=2, bg="yellow")
+    button1.grid(row=0, column=0, padx=20)
+
+    text2 = tk.Text(a, width=20, height=5)
+    text2.insert(tk.CURRENT, '给您提供的手机号为：\n')
+    text2.grid(row=0, column=1, padx=20)
+
+    text1 = tk.Text(a, width=60, height=5)
+    text1.insert(tk.CURRENT, '您的验证码相关信息如下：\n')
+    text1.grid(row=0, column=2, padx=20)
+
+    button2 = tk.Button(a, text="憨憨，释放手机号吗？？？", command=lambda: thread_it(release), font=('微软雅黑', 12), width=20,
+                        height=2, bg="yellow")
+    button2.grid(row=2, column=0, pady=50)
+
     top.mainloop()
 
 
