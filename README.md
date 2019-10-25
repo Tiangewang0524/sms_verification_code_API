@@ -1,8 +1,13 @@
 # 短信验证码接收API
 
+1.2
+
+修正了一处可能导致程序卡死崩溃的bug。
+更新了界面，获取手机号和短信更加便捷。
+
 1.1
 
-修正了不能显示运营商的bug
+修正了不能显示运营商的bug。
 
 
 1.0
@@ -26,7 +31,7 @@
  
 ## prerequisite:
 
-pip install win32gui win32con win32clipboard tkinter json
+pip install tkinter
 
 原phone package因不准确不再使用
  
