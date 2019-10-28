@@ -8,6 +8,9 @@ import tkinter.messagebox
 import time
 import json
 import threading
+import inspect
+import ctypes
+from urllib.parse import quote
 
 # import phone
 
@@ -20,9 +23,64 @@ sid = "70122"
 ph_num = ''
 msg_info = ''
 text1 = ''
+user_info = ''
+# 文本框选择结果
+listbox_selection = ''
+
 
 hl = hashlib.md5()
 hl.update(password.encode(encoding='utf-8'))
+
+# 线程相关类
+class TestThread(threading.Thread):
+
+    def __init__(self, thread_num=0, timeout=1.0):
+        super(TestThread, self).__init__()
+        self.thread_num = thread_num
+
+        self.stopped = False
+        self.timeout = timeout
+
+    def run(self):
+        def target_func():
+            # inp = raw_input("Thread %d: " % self.thread_num)
+            # print('Thread %s input %s' % (self.thread_num, inp))
+            while True:
+                pass
+
+        subthread = threading.Thread(target=target_func, args=())
+        subthread.setDaemon(True)
+        subthread.start()
+
+        while not self.stopped:
+            subthread.join(self.timeout)
+
+        print('Thread stopped')
+
+    def stop(self):
+        self.stopped = True
+
+    def isStopped(self):
+        return self.stopped
+
+# kill线程相关
+def _async_raise(tid, exctype):
+    """raises the exception, performs cleanup if needed"""
+    tid = ctypes.c_long(tid)
+    if not inspect.isclass(exctype):
+        exctype = type(exctype)
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        # """if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"""
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+
+def stop_thread(thread):
+    _async_raise(thread.ident, SystemExit)
 
 
 # 登录
@@ -67,15 +125,26 @@ def getNumber(Token, sid):
     # level =c 代表城市, =p 代表省
     # city/province 必须使用Urlencode进行中文编码
     # e.g. 郑州
-    city = '%e9%83%91%e5%b7%9e'
-    url = "http://api.sfoxer.com/api/do.php?action=getPhone&token={0}&sid={1}" \
-          "&locationMatching=include&locationLevel=c&location={2}".format(Token, sid, city)
-    # print(url)
-    res = requests.get(url).text
-    phone_num = res.split("|")
-    # 返回 1 | 手机号
-    # print(phone_num[1])
-    return phone_num[1]
+    # city = '%e9%83%91%e5%b7%9e'
+    global listbox_selection
+
+    if listbox_selection == '':
+        tkinter.messagebox.showwarning('警告','请选择一个城市')
+    else:
+        city = quote(listbox_selection)
+        print(listbox_selection)
+        url = "http://api.sfoxer.com/api/do.php?action=getPhone&token={0}&sid={1}" \
+              "&locationMatching=include&locationLevel=c&location={2}".format(Token, sid, city)
+        print(url)
+        res = requests.get(url).text
+        phone_num = res.split("|")
+        # 返回 1 | 手机号
+        # print(phone_num[1])
+        if phone_num[0] == '1':
+            return phone_num[1]
+        else:
+            tkinter.messagebox.showinfo('通知', '号码库未记录该地区号码')
+            return phone_num[1]
 
 
 # 检测手机号
@@ -120,11 +189,13 @@ def getSummary(Token):
     1.成功返回: 1|余额|等级|批量取号数|用户类型
     2.失败返回: 0|错误信息
     """
+    global user_info
     url = "http://api.sfoxer.com/api/do.php?action=getSummary&token={0}".format(Token)
     res = requests.get(url).text
     info = res.split('|')
     # print(res)
-    print('您的账户余额为{0}, 等级为{1}, 批量取号数为{2}, 用户类型为{3}'.format(info[1], info[2], info[3], info[4]))
+    # print('您的账户余额为{0}, 等级为{1}, 批量取号数为{2}, 用户类型为{3}'.format(info[1], info[2], info[3], info[4]))
+    user_info = '您的账户余额为{0}, 等级为{1}, 批量取号数为{2}, 用户类型为{3}'.format(info[1], info[2], info[3], info[4])
 
 
 # 获取验证码
@@ -160,9 +231,76 @@ def first():
     # 用户登录接码码 返回值token
     Token = loginIn()
     # 设置
-    sem = threading.Semaphore(1)
+    sem = threading.Semaphore(2)
     global text1
+    # 界面用户信息
+    getSummary(Token)
 
+    # Frame
+    fm1 = tk.Frame(top, bg='black')
+    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 1.2版", font=('微软雅黑', 40), fg="white", bg='black')
+    fm1.titleLabel.pack()
+    fm1.pack(side=tk.TOP, expand=tk.YES, fill='x', pady=5)
+
+    # Grid
+    a = tk.Frame(top, height=50, width=200)
+    a.pack(side='top', fill='both', expand=True, padx=100)
+    button1 = tk.Button(a, text="憨憨，准备接码！！！", command=lambda: thread_it(helloCallBack), font=('微软雅黑', 12),
+                        width=20, height=2, bg="yellow")
+    button1.grid(row=0, column=0, padx=20)
+
+    # 文本框相关
+    m_listbox_var = tk.StringVar()
+    m_list = tk.Listbox(a, listvariable=m_listbox_var, selectbackground='red', selectmode=tk.SINGLE, width=20, height=10)
+    with open('./dataset/city_sorted.txt', 'r') as f1:
+        # temp_list = ['南京', '北京', '乌鲁木齐', 'hello Miss4', 'hello Miss5', 'hello Miss6']
+        temp_list = f1.readlines()
+    for item in temp_list:
+        # 去掉换行符
+        item = item.strip()
+        m_list.insert(tk.END, item)
+
+    m_list.grid(row=1, column=0, pady=10, padx=5)
+
+    # m_list 文本框选中事件
+    def show_city(event):
+        global listbox_selection
+        if m_list.curselection():
+            listbox_selection = m_list.get(m_list.curselection())
+            print(m_list.get(m_list.curselection()))
+
+    # show_city = lambda x: print(temp_list[x])
+    m_list.bind("<<ListboxSelect>>", show_city)
+
+    # 滚动条
+    m_scrl = tk.Scrollbar(a, width=15)
+    m_scrl.grid(row=1, column=0, padx=20, ipady=30, sticky=tk.E)
+    m_list.configure(yscrollcommand=m_scrl.set)
+    m_scrl['command'] = m_list.yview
+
+    text2 = tk.Text(a, width=20, height=5)
+    text2.insert(tk.CURRENT, '给您提供的手机号为：\n')
+    text2.grid(row=0, column=1, padx=20)
+
+    text1 = tk.Text(a, width=60, height=5)
+    text1.insert(tk.CURRENT, '您的验证码相关信息如下：\n')
+    text1.grid(row=0, column=2, padx=20)
+
+    button2 = tk.Button(a, text="憨憨，释放手机号吗？？？", command=lambda: thread_it(release), font=('微软雅黑', 12), width=20,
+                        height=2, bg="yellow")
+    button2.grid(row=2, column=0, pady=50)
+
+    button2 = tk.Button(a, text="取消", command=lambda: thread_it(stop_thread, threading.current_thread()), font=('微软雅黑', 12), width=20,
+                        height=2, bg="yellow")
+    button2.grid(row=3, column=0, pady=10)
+
+    # 底部frame,实时显示用户余额
+    fm2 = tk.Frame(top, bg='black')
+    fm2.titleLabel = tk.Label(fm2, text=user_info, font=('微软雅黑', 20), fg="white", bg='black')
+    fm2.titleLabel.pack()
+    fm2.pack(side=tk.BOTTOM, expand=tk.YES, fill='x', pady=5)
+
+    # 回调函数
     def helloCallBack():
         global ph_num, msg_info
         a = 1
@@ -174,8 +312,11 @@ def first():
             # 取手机号  return 手机号
             phone_num = getNumber(Token, sid)
             ph_num = phone_num
-            text2.insert(tk.END, ph_num)
-            text2.insert(tk.END, '\n')
+            if phone_num != '未获取到号码':
+                text2.insert(tk.END, ph_num)
+                text2.insert(tk.END, '\n')
+            # else:
+            #     break
             # check(phone_num)
 
             # 检查运营商信息
@@ -185,14 +326,13 @@ def first():
             print('给您提供的手机号为:{0}, 运营商为:{1}'.format(phone_num, operator_info))
             text2.insert(tk.END, operator_info)
 
-            # 获取用户信息
-            getSummary(Token)
-
             # 获取验证码
             msg_info = getMessage(Token, sid, ph_num, user_name)
             if msg_info:
                 text1.insert(tk.END, msg_info)
                 text1.update()
+                # 扣费后更新用户信息
+                getSummary(Token)
             # if code:
             #     print("验证码：", code)
             a = a + 1
@@ -209,11 +349,11 @@ def first():
 
     def thread_it(func, *args):
         '''将函数打包进线程'''
-
-        def gothread():
+        def gothread(*args):
             sem.acquire()
             # print(threading.current_thread().name)
-            func()
+            func(*args)
+            print(t)
 
         # 创建
         t = threading.Thread(target=gothread, args=args)
@@ -224,30 +364,6 @@ def first():
         # 阻塞--卡死界面！
         # t.join()
 
-    # Frame
-    fm1 = tk.Frame(top, bg='black')
-    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 1.2版", font=('微软雅黑', 40), fg="white", bg='black')
-    fm1.titleLabel.pack()
-    fm1.pack(side=tk.TOP, expand=tk.YES, fill='x', pady=5)
-
-    # Grid
-    a = tk.Frame(top, height=50, width=200)
-    a.pack(side='top', fill='both', expand=True, padx=100)
-    button1 = tk.Button(a, text="憨憨，准备接码！！！", command=lambda: thread_it(helloCallBack), font=('微软雅黑', 12),
-                        width=20, height=2, bg="yellow")
-    button1.grid(row=0, column=0, padx=20)
-
-    text2 = tk.Text(a, width=20, height=5)
-    text2.insert(tk.CURRENT, '给您提供的手机号为：\n')
-    text2.grid(row=0, column=1, padx=20)
-
-    text1 = tk.Text(a, width=60, height=5)
-    text1.insert(tk.CURRENT, '您的验证码相关信息如下：\n')
-    text1.grid(row=0, column=2, padx=20)
-
-    button2 = tk.Button(a, text="憨憨，释放手机号吗？？？", command=lambda: thread_it(release), font=('微软雅黑', 12), width=20,
-                        height=2, bg="yellow")
-    button2.grid(row=2, column=0, pady=50)
 
     top.mainloop()
 
