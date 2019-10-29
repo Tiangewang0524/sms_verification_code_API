@@ -28,40 +28,9 @@ user_info = ''
 listbox_selection = ''
 
 
+
 hl = hashlib.md5()
 hl.update(password.encode(encoding='utf-8'))
-
-# 线程相关类
-class TestThread(threading.Thread):
-
-    def __init__(self, thread_num=0, timeout=1.0):
-        super(TestThread, self).__init__()
-        self.thread_num = thread_num
-
-        self.stopped = False
-        self.timeout = timeout
-
-    def run(self):
-        def target_func():
-            # inp = raw_input("Thread %d: " % self.thread_num)
-            # print('Thread %s input %s' % (self.thread_num, inp))
-            while True:
-                pass
-
-        subthread = threading.Thread(target=target_func, args=())
-        subthread.setDaemon(True)
-        subthread.start()
-
-        while not self.stopped:
-            subthread.join(self.timeout)
-
-        print('Thread stopped')
-
-    def stop(self):
-        self.stopped = True
-
-    def isStopped(self):
-        return self.stopped
 
 # kill线程相关
 def _async_raise(tid, exctype):
@@ -80,7 +49,12 @@ def _async_raise(tid, exctype):
 
 
 def stop_thread(thread):
-    _async_raise(thread.ident, SystemExit)
+    if thread.name != 'MainThread':
+        _async_raise(thread.ident, SystemExit)
+
+def stop_thread_step():
+    print(threading.active_count())
+    stop_thread(threading.enumerate()[-1])
 
 
 # 登录
@@ -130,6 +104,8 @@ def getNumber(Token, sid):
 
     if listbox_selection == '':
         tkinter.messagebox.showwarning('警告','请选择一个城市')
+        # 程序报错, 线程停止并不再进行操作
+        stop_thread(threading.enumerate()[-1])
     else:
         city = quote(listbox_selection)
         print(listbox_selection)
@@ -175,7 +151,7 @@ def cancelAllRecv(sid, phone_num, Token):  # 释放手机号
     url = "http://api.sfoxer.com/api/do.php?action=cancelAllRecv&token={0}".format(Token)
     #  url = "http://api.xinheyz.com/api/do.php?action=cancelRecv&sid={0}&phone={1}&token={2}"
     #  .format(sid,phone_num,Token) #项目id 手机号 登录返回的口令
-    print(url)
+    # print(url)
     res = requests.get(url).text
     res = res.split('|')
     # print(res)
@@ -226,15 +202,103 @@ def getMessage(Token, sid, phone_num, user_name):
 def first():
     top = tk.Tk()
     top.geometry("900x600")
-    top.title("阿里鸽鸽 version 1.2 beta版")
+    top.title("阿里鸽鸽 version 1.3 beta版")
     phone_num = 0
     # 用户登录接码码 返回值token
     Token = loginIn()
-    # 设置
-    sem = threading.Semaphore(2)
+    # 设置进程数，无效已废弃使用
+    # sem = threading.Semaphore(3)
     global text1
     # 界面用户信息
     getSummary(Token)
+
+    # 主要功能的回调函数
+    def helloCallBack():
+        if threading.active_count() > 2:
+            # 如果多次获取，则结束上一次获取，以最新的获取为准
+            stop_thread(threading.enumerate()[-2])
+            text1.delete(1.0, 3.0)
+            text2.delete(1.0, 'end')
+            text1.insert(tk.CURRENT, '您的验证码相关信息如下：\n')
+            text2.insert(tk.CURRENT, '给您提供的手机号为：\n')
+            text1.update()
+            text2.update()
+        global ph_num, msg_info
+        a = 1
+        # 如需获取多个手机号 请将循环条件改为 a < 要获取的手机号数量+1
+        while a < 2:
+            time.sleep(1)
+            # 用户登录接码码 返回值token
+            # Token = loginIn()
+            # 取手机号  return 手机号
+            phone_num = getNumber(Token, sid)
+            ph_num = phone_num
+            if phone_num != '未获取到号码':
+                text2.insert(tk.END, ph_num)
+                text2.insert(tk.END, '\n')
+            # else:
+            #     break
+            # check(phone_num)
+
+            # 检查运营商信息
+            temp_url = 'http://mobsec-dianhua.baidu.com/dianhua_api/open/location?tel=' + str(phone_num)
+            html_info = requests.get(temp_url).text
+            operator_info = json.loads(html_info)['response'][phone_num]['location']
+            print('给您提供的手机号为:{0}, 运营商为:{1}'.format(phone_num, operator_info))
+            text2.insert(tk.END, operator_info)
+
+            # 获取验证码
+            msg_info = getMessage(Token, sid, ph_num, user_name)
+            if msg_info:
+                text1.insert(tk.END, msg_info)
+                text1.update()
+                # 扣费后更新用户信息
+                getSummary(Token)
+            # if code:
+            #     print("验证码：", code)
+            a = a + 1
+
+    # 释放手机号的回调函数
+    def release():
+        if threading.active_count() > 2:
+            stop_thread(threading.enumerate()[-2])
+            text1.delete(1.0, 3.0)
+            text2.delete(1.0, 'end')
+            text1.insert(tk.CURRENT, '您的验证码相关信息如下：\n')
+            text2.insert(tk.CURRENT, '给您提供的手机号为：\n')
+            text1.update()
+            text2.update()
+            o_code = cancelAllRecv(sid, phone_num, Token)
+            time.sleep(2)
+            if o_code[0] == '1':
+                # print('手机号释放成功!')
+                tkinter.messagebox.showinfo('通知', '手机号释放成功！')
+                getSummary(Token)
+            else:
+                tkinter.messagebox.showwarning('警告', o_code[1])
+        else:
+            tkinter.messagebox.showwarning('警告', '没有获取到手机号, 释放失败！请重试！')
+
+    def thread_it(func, *args):
+        '''将函数打包进线程'''
+        def gothread(*args):
+            # sem.acquire()
+            # print(threading.current_thread().name)
+            func(*args)
+
+        # 创建
+        t = threading.Thread(target=gothread, args=args)
+        # 守护 !!!
+        t.setDaemon(True)
+        # 启动
+        t.start()
+        # print(threading.current_thread())
+        # print(threading.active_count())
+
+        # 阻塞--卡死界面！
+        # t.join()
+
+
 
     # Frame
     fm1 = tk.Frame(top, bg='black')
@@ -245,13 +309,11 @@ def first():
     # Grid
     a = tk.Frame(top, height=50, width=200)
     a.pack(side='top', fill='both', expand=True, padx=100)
-    button1 = tk.Button(a, text="憨憨，准备接码！！！", command=lambda: thread_it(helloCallBack), font=('微软雅黑', 12),
-                        width=20, height=2, bg="yellow")
-    button1.grid(row=0, column=0, padx=20)
 
     # 文本框相关
     m_listbox_var = tk.StringVar()
-    m_list = tk.Listbox(a, listvariable=m_listbox_var, selectbackground='red', selectmode=tk.SINGLE, width=20, height=10)
+    m_list = tk.Listbox(a, listvariable=m_listbox_var, selectbackground='red', selectmode=tk.SINGLE, width=20,
+                        height=10)
     with open('./dataset/city_sorted.txt', 'r') as f1:
         # temp_list = ['南京', '北京', '乌鲁木齐', 'hello Miss4', 'hello Miss5', 'hello Miss6']
         temp_list = f1.readlines()
@@ -286,13 +348,20 @@ def first():
     text1.insert(tk.CURRENT, '您的验证码相关信息如下：\n')
     text1.grid(row=0, column=2, padx=20)
 
+
+    button1 = tk.Button(a, text="憨憨，准备接码！！！", command=lambda: thread_it(helloCallBack), font=('微软雅黑', 12),
+                        width=20, height=2, bg="yellow")
+    button1.grid(row=0, column=0, padx=20)
+
+
     button2 = tk.Button(a, text="憨憨，释放手机号吗？？？", command=lambda: thread_it(release), font=('微软雅黑', 12), width=20,
                         height=2, bg="yellow")
     button2.grid(row=2, column=0, pady=50)
 
-    button2 = tk.Button(a, text="取消", command=lambda: thread_it(stop_thread, threading.current_thread()), font=('微软雅黑', 12), width=20,
-                        height=2, bg="yellow")
-    button2.grid(row=3, column=0, pady=10)
+    # button3 = tk.Button(a, text="取消", command=stop_thread_step,
+    #                     font=('微软雅黑', 12), width=20,
+    #                     height=2, bg="yellow")
+    # button3.grid(row=3, column=0, pady=10)
 
     # 底部frame,实时显示用户余额
     fm2 = tk.Frame(top, bg='black')
@@ -300,71 +369,14 @@ def first():
     fm2.titleLabel.pack()
     fm2.pack(side=tk.BOTTOM, expand=tk.YES, fill='x', pady=5)
 
-    # 回调函数
-    def helloCallBack():
-        global ph_num, msg_info
-        a = 1
-        # # 如需获取多个手机号 请将循环条件改为 a < 要获取的手机号数量+1
-        while a < 2:
-            time.sleep(1)
-            # 用户登录接码码 返回值token
-            # Token = loginIn()
-            # 取手机号  return 手机号
-            phone_num = getNumber(Token, sid)
-            ph_num = phone_num
-            if phone_num != '未获取到号码':
-                text2.insert(tk.END, ph_num)
-                text2.insert(tk.END, '\n')
-            # else:
-            #     break
-            # check(phone_num)
 
-            # 检查运营商信息
-            temp_url = 'http://mobsec-dianhua.baidu.com/dianhua_api/open/location?tel=' + str(phone_num)
-            html_info = requests.get(temp_url).text
-            operator_info = json.loads(html_info)['response'][phone_num]['location']
-            print('给您提供的手机号为:{0}, 运营商为:{1}'.format(phone_num, operator_info))
-            text2.insert(tk.END, operator_info)
+    # def useless():
+    #     # print(threading.enumerate())
+    #     # print(threading.enumerate()[-1])
+    #     while True:
+    #         pass
 
-            # 获取验证码
-            msg_info = getMessage(Token, sid, ph_num, user_name)
-            if msg_info:
-                text1.insert(tk.END, msg_info)
-                text1.update()
-                # 扣费后更新用户信息
-                getSummary(Token)
-            # if code:
-            #     print("验证码：", code)
-            a = a + 1
-
-    def release():
-
-        o_code = cancelAllRecv(sid, phone_num, Token)
-        time.sleep(3)
-        if o_code[0] == '1':
-            print('手机号释放成功!')
-            getSummary(Token)
-        else:
-            print(o_code[1])
-
-    def thread_it(func, *args):
-        '''将函数打包进线程'''
-        def gothread(*args):
-            sem.acquire()
-            # print(threading.current_thread().name)
-            func(*args)
-            print(t)
-
-        # 创建
-        t = threading.Thread(target=gothread, args=args)
-        # 守护 !!!
-        t.setDaemon(True)
-        # 启动
-        t.start()
-        # 阻塞--卡死界面！
-        # t.join()
-
-
+    # thread_it(useless)
     top.mainloop()
 
 
