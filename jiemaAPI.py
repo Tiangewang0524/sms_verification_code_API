@@ -221,7 +221,7 @@ def getMessage(Token, sid, phone_num, user_name):
 def first():
     top = tk.Tk()
     top.geometry("960x650")
-    top.title("阿里鸽鸽 version 1.4 beta版")
+    top.title("阿里鸽鸽 version 2.0 beta版")
     phone_num = 0
     # 用户登录接码码 返回值token
     Token = loginIn()[1]
@@ -326,7 +326,7 @@ def first():
 
     # Frame
     fm1 = tk.Frame(top, bg='black')
-    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 1.4版", font=('微软雅黑', 30), fg="white", bg='black')
+    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 2.0版", font=('微软雅黑', 30), fg="white", bg='black')
     fm1.titleLabel.pack()
     fm1.pack(side=tk.TOP, expand=tk.YES, fill='x', pady=5)
 
@@ -486,6 +486,6 @@ def first():
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("用户登录")
+    root.title("阿里鸽鸽 version 2.0 beta版 用户登录")
     app = Reg(root)
     root.mainloop()

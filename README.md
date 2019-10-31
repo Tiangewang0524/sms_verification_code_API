@@ -1,6 +1,8 @@
 # 短信验证码接收API
 
 
+
+
 2.0
 
 * 修正了获取完短信不更新用户余额的bug。
@@ -9,7 +11,11 @@
 
 * 增加了登录界面。
 
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/raw/master/dataset/capture1.JPG)
+
 * 整合成exe文件，可以直接使用。
+
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/raw/master/dataset/capture2.JPG)
 
 
 1.3
