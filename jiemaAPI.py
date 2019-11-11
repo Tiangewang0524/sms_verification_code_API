@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+import re
 import requests
 import hashlib
 import tkinter as tk
@@ -91,7 +94,7 @@ def stop_thread(thread):
         _async_raise(thread.ident, SystemExit)
 
 def stop_thread_step():
-    print(threading.active_count())
+    # print(threading.active_count())
     stop_thread(threading.enumerate()[-1])
 
 
@@ -221,7 +224,7 @@ def getMessage(Token, sid, phone_num, user_name):
 def first():
     top = tk.Tk()
     top.geometry("960x650")
-    top.title("阿里鸽鸽 version 2.0 beta版")
+    top.title("阿里鸽鸽 version 2.1 beta版")
     phone_num = 0
     # 用户登录接码码 返回值token
     Token = loginIn()[1]
@@ -283,8 +286,10 @@ def first():
 
     # 释放手机号的回调函数
     def release():
-        if threading.active_count() > 2:
-            stop_thread(threading.enumerate()[-2])
+        phone_pat = re.match(r"^1[3456789]\d{9}$", text2.get('2.0', '3.0'))
+        if phone_pat:
+            if threading.active_count() > 2:
+                stop_thread(threading.enumerate()[-2])
             text1.delete(1.0, 3.0)
             text2.delete(1.0, 'end')
             text1.insert(tk.CURRENT, '您的验证码相关信息如下：\n')
@@ -326,7 +331,7 @@ def first():
 
     # Frame
     fm1 = tk.Frame(top, bg='black')
-    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 2.0版", font=('微软雅黑', 30), fg="white", bg='black')
+    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 2.1版", font=('微软雅黑', 30), fg="white", bg='black')
     fm1.titleLabel.pack()
     fm1.pack(side=tk.TOP, expand=tk.YES, fill='x', pady=5)
 
@@ -350,7 +355,7 @@ def first():
     # 设置下拉菜单中的值
     cmb_1['value'] = ('自行选择地区', '随机生成')
     # 设置默认值，即默认下拉框中的内容
-    # cmb_1.current(0)
+    cmb_1.current(1)
 
     # 城市/省文本框初始化
     m_listbox_var = tk.StringVar()
@@ -375,7 +380,7 @@ def first():
             level = 'c'
             # 文本框相关
             m_list.delete(0, tk.END)
-            with open('./dataset/city_sorted.txt', 'r') as f1:
+            with open('./dataset/city_sorted.txt', 'r', encoding='gbk') as f1:
                 # temp_list = ['南京', '北京', '乌鲁木齐', 'hello Miss4', 'hello Miss5', 'hello Miss6']
                 temp_list = f1.readlines()
             for item in temp_list:
@@ -404,7 +409,7 @@ def first():
             level = 'p'
             # 文本框相关
             m_list.delete(0, tk.END)
-            with open('./dataset/province.txt', 'r') as f1:
+            with open('./dataset/province.txt', 'r', encoding='gbk') as f1:
                 temp_list = f1.readlines()
             for item in temp_list:
                 # 去掉换行符
@@ -486,6 +491,6 @@ def first():
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("阿里鸽鸽 version 2.0 beta版 用户登录")
+    root.title("阿里鸽鸽 version 2.1 beta版 用户登录")
     app = Reg(root)
     root.mainloop()
