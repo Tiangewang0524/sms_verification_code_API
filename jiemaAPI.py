@@ -2,7 +2,6 @@
 
 import re
 import requests
-import hashlib
 import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox
@@ -14,15 +13,13 @@ import ctypes
 import webbrowser
 from urllib.parse import quote
 
-# import phone
-
 # 用户名
 # 密码
-# 项目编号 T3出行:70122
+# 项目编号 T3出行:29895
 user_name = ""
 password = ""
-sid = "70122"
-ph_num = ''
+sid = "29895"
+phone_num = ''
 msg_info = ''
 text1 = ''
 user_info = ''
@@ -35,9 +32,6 @@ level = ''
 # 全局计数器
 i_count = 0
 
-
-hl = hashlib.md5()
-hl.update(password.encode(encoding='utf-8'))
 
 # 登录界面类
 class Reg(tk.Frame):
@@ -100,42 +94,57 @@ def stop_thread_step():
 
 # 登录
 def loginIn():
+    """
+    成功统一返回：1|token
+    失败统一返回：0|失败信息
+    """
+
     global user_name, password
-    url = "http://api.sfoxer.com/api/do.php?action=loginIn&name={0}&password={1}".format(user_name, password)
+    url = "http://115.231.220.181:8000/api/sign/username={0}&password={1}".format(user_name, password)
     res = requests.get(url).text
     token = res.split("|")
+    print(token)
     return token
 
 
 # 获取手机号
 def getNumber(Token, sid):
     """
-    手机号属性可选参数：
-    1.size=要获取手机号数量。1<size<50
-    2.phone=你要指定获取的号码,传入号码不正确的情况下,获取新号码.
-    3.phoneType=CMCC，CMCC是指移动，UNICOM是指联通，TELECOM是指电信
-    4.vno=0或1，0是指排除所有虚拟运营商号码，1是只获取虚拟运营商号码
-    5.locationMatching、locationLevel、location三个必须一起使用。用来指定获取某个地区的号码
-        5.1 locationMatching=include(包含区域) 或 locationMatching=exclude(排除区域)
-        5.2 locationLevel=p(省份) 或 locationLevel=c(城市)
-        5.3 location=(要包含或排除的省份或城市,该值对应locationLevel)
-        5.4 locationMatching、locationLevel、location三个必须一起使用。用来指定取某些区域的手机号或者不要某些区域的手机号
-    特别注意:
-    locationMatching的参数值只能是include或者exclude中的一个。
-    include指的是包含区域，exclude指的是不包含区域
-    locationLevel参数只能是p或者c中的一个。p指的是省（province），c指的是市（city）
-    location指的是具体地区，中文值。需要UrlEncode编码 例：湖南编码后的值为 u%e6%b9%96%e5%8d%97
+    [传入参数]：通过监听客户端http get请求发现随机生成和指定地区请求的服务器端口号以及地址都不同！
+
+    随机地区手机号属性可选参数：
+    [1] id=项目ID (对应的项目ID可在客户端软件里查询)
+    [2] operator=0 (0=默认 1=移动 2=联通 3=电信)
+    [3] Region=0 (0=默认)需要哪个地区的直接输入如：上海 系统会自动筛选上海的号码
+    [4] card=0 (0=默认 1=虚拟运营商 2=实卡)
+    [5] phone= (你要指定获取的号码,不传入号码情况下,获取新号码.)
+    [6] loop=1（1=过滤 2=不过滤）1排除已做过号码取号时不会再获取到，2不过滤已做号码可以取号时循环获取号码（号码循环做业务必须选择2）
+    [7] token=(登录成功返回的token)
+
+    指定地区手机号参数：
+    [1] username (登录时的用户名)
+    [2] password (登录时的对应密码)
+    [3] id=项目ID (对应的项目ID可在客户端软件里查询)
+    [4] phone= (你要指定获取的号码,不传入号码情况下,获取新号码.)
+    [5] operator=0 (0=默认 1=移动 2=联通 3=电信)
+    [6] region=具体的URLencode编码 (无默认值) 具体地区选择之后 quote函数自动转编码为URLencode
+        如：选择河南后 quote('河南') 转为 %e6%b2%b3%e5%8d%97 之后服务器响应一个归属地为河南的号码
+    [7] card= (默认为空/0 1=虚拟运营商 2=实卡)
+    [8] loop=（默认为空/1 1=过滤 2=不过滤）1排除已做过号码取号时不会再获取到，2不过滤已做号码可以取号时循环获取号码（号码循环做业务必须选择2）
     """
 
-    # 随机获取手机号
-    # url = "http://api.sfoxer.com/api/do.php?action=getPhone&token={0}&sid={1}".format(Token, sid)
+    """
+    成功返回: 1|获取到的手机号
+    失败返回: 0|错误信息
+    """
 
     # 指定地区
     # level =c 代表城市, =p 代表省
     # city/province 必须使用Urlencode进行中文编码
     # e.g. 郑州
     # city = '%e9%83%91%e5%b7%9e'
-    global listbox_selection, is_area, level
+
+    global listbox_selection, is_area, level, user_name, password
     if is_area:
         if listbox_selection == '':
             tkinter.messagebox.showwarning('警告','请选择一个城市/省')
@@ -144,8 +153,8 @@ def getNumber(Token, sid):
         else:
             city = quote(listbox_selection)
             # print(listbox_selection)
-            url = "http://api.sfoxer.com/api/do.php?action=getPhone&token={0}&sid={1}" \
-                  "&locationMatching=include&locationLevel={2}&location={3}".format(Token, sid, level, city)
+            url = "http://115.231.220.181:81/yh_qh/username={0}&password={1}&id={2}&phone=" \
+                  "&operator=&region={3}&card=&loop=".format(user_name, password, sid, city)
             # print(url)
             res = requests.get(url).text
             phone_num = res.split("|")
@@ -158,7 +167,7 @@ def getNumber(Token, sid):
                 return phone_num[1]
     else:
         # 随机生成号码
-        url = "http://api.sfoxer.com/api/do.php?action=getPhone&token={0}&sid={1}".format(Token, sid)
+        url = "http://115.231.220.181:8000/api/yh_qh/id={0}&operator=0&Region=0&card=0&phone=&loop=1&token={1}".format(sid, Token)
         res = requests.get(url).text
         phone_num = res.split("|")
         # 返回 1 | 手机号
@@ -167,16 +176,22 @@ def getNumber(Token, sid):
             return phone_num[1]
 
 # 释放手机号
-def cancelAllRecv(sid, phone_num, Token):  # 释放手机号
-    # url = "http://api.xinheyz.com/api/do.php?action=addBlacklist&sid={0}&phone={1}&token={2}"
+def cancelAllRecv(sid, phone_num, Token):
+    """
+    成功返回: 1|释放成功
+    失败返回: 0|错误信息
+    """
+
+    # 释放手机号
+    # url = "http://115.231.220.181:8000/api/yh_sf/id={0}&phone={1}&token={2}"
     # .format(sid, phone_num, Token)
-    url = "http://api.sfoxer.com/api/do.php?action=cancelAllRecv&token={0}".format(Token)
-    #  url = "http://api.xinheyz.com/api/do.php?action=cancelRecv&sid={0}&phone={1}&token={2}"
-    #  .format(sid,phone_num,Token) #项目id 手机号 登录返回的口令
-    # print(url)
-    res = requests.get(url).text
-    res = res.split('|')
-    # print(res)
+    # 释放全部手机号:
+    # url = "http://115.231.220.181:8000/api/yh_sf/token={0}".format(Token)
+    url = "http://115.231.220.181:8000/api/yh_sf/id={0}&phone={1}&token={2}"\
+        .format(sid, phone_num, Token) #项目id 手机号 登录返回的口令
+    res = requests.get(url)
+    res.encoding = res.apparent_encoding
+    res = res.text.split('|')
 
     return res
 
@@ -184,29 +199,38 @@ def cancelAllRecv(sid, phone_num, Token):  # 释放手机号
 # 获取用户信息
 def getSummary(Token):
     """
-    1.成功返回: 1|余额|等级|批量取号数|用户类型
-    2.失败返回: 0|错误信息
+    成功返回: 1|余额|可提现余额
+    失败返回: 0|错误信息
     """
     global user_info
-    url = "http://api.sfoxer.com/api/do.php?action=getSummary&token={0}".format(Token)
+    url = "http://115.231.220.181:8000/api/yh_gx/token={0}".format(Token)
     res = requests.get(url).text
     info = res.split('|')
     # print(res)
     # print('您的账户余额为{0}, 等级为{1}, 批量取号数为{2}, 用户类型为{3}'.format(info[1], info[2], info[3], info[4]))
-    user_info = '您的账户余额为{0}, 等级为{1}, 批量取号数为{2}, 用户类型为{3}'.format(info[1], info[2], info[3], info[4])
+    user_info = '您的账户余额为{0}, 可提现余额为{1}'.format(info[0], info[1])
 
 
 # 获取验证码
-def getMessage(Token, sid, phone_num, user_name):
-    global text1
-    url = "http://api.sfoxer.com/api/do.php?action=getMessage&token={0}&sid={1}&phone={2}".format(Token, sid, phone_num)
+def getMessage(Token, sid, phone_num):
+    """
+    成功返回: 1|短信内容
+    失败返回: 0|错误信息
+    """
+
+    global text1, user_name
+    url = "http://115.231.220.181:8000/api/yh_qm/id={0}&phone={1}&t={2}&token={3}".format(sid, phone_num, user_name, Token)
     res = requests.get(url)
+    # print(res.content)
+    # 响应自动正确转码
+    res.encoding = res.apparent_encoding
     i = 1
-    while res.text.split("|")[1] == '还没有接收到短信，请过3秒再试':
+    while res.text.split("|")[1] == '没有收到短信':
         msg_get_info = '正在获取短信中，第' + str(i) + '次尝试'
         # print(msg_get_info)
         i += 1
         res = requests.get(url)
+        res.encoding = res.apparent_encoding
         text1.insert(tk.END, msg_get_info)
         text1.insert(tk.END, '\n')
         time.sleep(3)
@@ -214,8 +238,6 @@ def getMessage(Token, sid, phone_num, user_name):
     else:
         if res.text.split("|")[0] == '0':
             tkinter.messagebox.showwarning(res.text.split("|")[1])
-        # else:
-        #     print('接收到验证码, 验证码为{}'.format(res.text.split("|")[1]))
 
     return res.text.split("|")[1]
 
@@ -224,13 +246,12 @@ def getMessage(Token, sid, phone_num, user_name):
 def first():
     top = tk.Tk()
     top.geometry("960x650")
-    top.title("阿里鸽鸽 version 2.1 beta版")
-    phone_num = 0
+    top.title("阿里鸽鸽 version 2.2 beta版")
     # 用户登录接码码 返回值token
     Token = loginIn()[1]
     # 设置进程数，无效已废弃使用
     # sem = threading.Semaphore(3)
-    global text1
+    global text1, phone_num
     # 界面用户信息
     getSummary(Token)
 
@@ -248,7 +269,7 @@ def first():
             # 如果多次获取，则结束上一次获取，以最新的获取为准
             stop_thread(threading.enumerate()[-2])
 
-        global ph_num, msg_info
+        global phone_num, msg_info
         a = 1
         # 如需获取多个手机号 请将循环条件改为 a < 要获取的手机号数量+1
         while a < 2:
@@ -257,9 +278,9 @@ def first():
             # Token = loginIn()
             # 取手机号  return 手机号
             phone_num = getNumber(Token, sid)
-            ph_num = phone_num
+            # ph_num = phone_num
             if phone_num != '未获取到号码':
-                text2.insert(tk.END, ph_num)
+                text2.insert(tk.END, phone_num)
                 text2.insert(tk.END, '\n')
             # else:
             #     break
@@ -273,7 +294,7 @@ def first():
             text2.insert(tk.END, operator_info)
 
             # 获取验证码
-            msg_info = getMessage(Token, sid, ph_num, user_name)
+            msg_info = getMessage(Token, sid, phone_num)
             if msg_info:
                 text1.insert(tk.END, msg_info)
                 text1.update()
@@ -331,7 +352,7 @@ def first():
 
     # Frame
     fm1 = tk.Frame(top, bg='black')
-    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 2.1版", font=('微软雅黑', 30), fg="white", bg='black')
+    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 2.2版", font=('微软雅黑', 30), fg="white", bg='black')
     fm1.titleLabel.pack()
     fm1.pack(side=tk.TOP, expand=tk.YES, fill='x', pady=5)
 
@@ -491,6 +512,6 @@ def first():
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("阿里鸽鸽 version 2.1 beta版 用户登录")
+    root.title("阿里鸽鸽 version 2.2 beta版 用户登录")
     app = Reg(root)
     root.mainloop()
