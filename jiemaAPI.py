@@ -13,27 +13,45 @@ import ctypes
 import webbrowser
 from urllib.parse import quote
 
-# 用户名
-# 密码
-# 项目编号 T3出行:29895
+
+"""
+全局变量介绍：
+user_name：登录用户名
+password：登录密码
+sid: 项目编号
+phone_num: 获取的手机号
+msg_info: 验证码信息
+text1: 获取验证码的文本框
+user_info: 账户信息
+item: 项目搜索框中的信息
+item_info: 服务器返回的模糊查询的项目及编号信息
+sid_selection: 项目选择结果
+button_list: 项目搜索弹窗的按钮列表（用于删除多余按钮）
+listbox_selection: 文本框选择结果
+is_area: 选择地区的标识
+level: 区分省/城市的标识
+i_count: 全局计数器
+
+"""
+
 user_name = ""
 password = ""
-sid = "29895"
+sid = ""
 phone_num = ''
 msg_info = ''
 text1 = ''
 user_info = ''
-# 文本框选择结果
+item = ""
+item_info = ""
+sid_selection = ""
+button_list = []
 listbox_selection = ''
-# 选择地区的标识
 is_area = 0
-# 区分省/城市的标识
 level = ''
-# 全局计数器
 i_count = 0
 
 
-# 登录界面类
+# 登录界面类（所有界面终止并激活新界面类可这么写）
 class Reg(tk.Frame):
 
     def __init__(self, master):
@@ -48,9 +66,10 @@ class Reg(tk.Frame):
         self.ent2 = tk.Entry(self.frame, show="*")
         self.ent2.grid(row=1, column=1, sticky=tk.W)
         self.button = tk.Button(self.frame, text="登录", command=lambda: self.Submit(master))
-        self.button.place(x=100, y=46)
+        # self.button.place(x=100, y=46)
+        self.button.grid(row=2, column=1, sticky=tk.W, ipadx=20)
         self.button2 = tk.Button(self.frame, text="注册", command=self.Register)
-        self.button2.grid(row=2, column=1, sticky=tk.E)
+        self.button2.grid(row=2, column=1, sticky=tk.E, ipadx=20)
 
     def Submit(self, master):
         global user_name, password
@@ -66,6 +85,85 @@ class Reg(tk.Frame):
 
     def Register(self):
         webbrowser.open("http://www.sfoxer.com/reg.html", new=0)
+
+
+# 项目搜索选择类（所有弹窗类可这么写）
+class Item_search(tk.Toplevel):
+    count = 0
+
+    def __init__(self):
+        super().__init__()
+        self.title("阿里鸽鸽 version 2.3 beta版 项目搜索")
+        Item_search.count += 1
+
+        # 弹窗界面
+
+        # 第一行
+        row1 = tk.Frame(self)
+        row1.pack(fill="x")
+        tk.Label(row1, text="您要搜索的项目名称:", width=15).pack(side=tk.LEFT)
+        self.item = tk.StringVar()
+        tk.Entry(row1, textvariable=self.item, width=20).pack(side=tk.LEFT)
+
+        # 第二行
+        row2 = tk.Frame(self)
+        row2.pack(fill="x")
+        tk.Button(row2, text="搜索", command=self.Search).pack(side=tk.RIGHT)
+
+        # 第三行
+        self.row3 = tk.Frame(self)
+        self.row3.pack(fill="x")
+
+    # 展示项目id相关函数
+    def show_sid(self, text, event):
+        global sid_selection, sid
+        button = tk.Button(self.row3, text="确定", command=self.close)
+
+        if text.curselection():
+            sid_selection = text.get(text.curselection())
+
+            # 避免选中第一行
+            try:
+                sid = re.match(r"^\d+", sid_selection).group()
+
+                if sid:
+                    button.grid(row=4, column=2, sticky=tk.E)
+                    button_list.append(button)
+            except:
+                for button in button_list:
+                    button.destroy()
+                button_list.clear()
+
+    def Search(self):
+        global item, item_info
+        item = self.item.get()
+        item_info = searchItem()
+
+        if item_info:
+
+            listbox_var = tk.StringVar()
+            text = tk.Listbox(self.row3, listvariable=listbox_var, selectbackground='red', selectmode=tk.SINGLE,
+                              width=18, height=5)
+            text.insert(tk.END, '搜索到的项目：\n')
+            text.grid(row=4, column=0, padx=15)
+
+            for each in item_info:
+                text.insert(tk.END, each)
+
+            # 展示项目边框的滚动条
+            text_scrl = tk.Scrollbar(self.row3, width=15)
+            text_scrl.grid(row=4, column=0, padx=7, ipady=20, sticky=tk.E)
+            text.configure(yscrollcommand=text_scrl.set)
+            text_scrl['command'] = text.yview
+
+            text.bind("<<ListboxSelect>>", lambda event: self.show_sid(text, event))
+
+        else:
+            tkinter.messagebox.showinfo('通知', '抱歉，没搜索到相关项目！')
+
+    def close(self):
+        self.destroy()
+
 
 # kill线程相关
 def _async_raise(tid, exctype):
@@ -103,9 +201,22 @@ def loginIn():
     url = "http://115.231.220.181:8000/api/sign/username={0}&password={1}".format(user_name, password)
     res = requests.get(url).text
     token = res.split("|")
-    print(token)
     return token
 
+# 获取项目id
+def searchItem():
+    """
+    用于搜索项目
+    返回输入字符的相关搜索结果
+    """
+    url = "http://115.231.220.181:83/liebiao_xm/username={0}&password={1}&lx=1&ss={2}".format(user_name, password, item)
+    res = requests.get(url)
+    res.encoding = res.apparent_encoding
+    info = res.text.replace('#c', '')
+
+    info_pat = re.findall(r"\d+-\w*-?[\u4e00-\u9fa5]+", info)
+
+    return info_pat
 
 # 获取手机号
 def getNumber(Token, sid):
@@ -188,7 +299,7 @@ def cancelAllRecv(sid, phone_num, Token):
     # 释放全部手机号:
     # url = "http://115.231.220.181:8000/api/yh_sf/token={0}".format(Token)
     url = "http://115.231.220.181:8000/api/yh_sf/id={0}&phone={1}&token={2}"\
-        .format(sid, phone_num, Token) #项目id 手机号 登录返回的口令
+        .format(sid, phone_num, Token)  # 项目id 手机号 登录返回的口令
     res = requests.get(url)
     res.encoding = res.apparent_encoding
     res = res.text.split('|')
@@ -203,12 +314,13 @@ def getSummary(Token):
     失败返回: 0|错误信息
     """
     global user_info
-    url = "http://115.231.220.181:8000/api/yh_gx/token={0}".format(Token)
-    res = requests.get(url).text
-    info = res.split('|')
-    # print(res)
-    # print('您的账户余额为{0}, 等级为{1}, 批量取号数为{2}, 用户类型为{3}'.format(info[1], info[2], info[3], info[4]))
-    user_info = '您的账户余额为{0}, 可提现余额为{1}'.format(info[0], info[1])
+    # url = "http://115.231.220.181:8000/api/yh_gx/token={0}".format(Token)
+    # res = requests.get(url).text
+    # info = res.split('|')
+    # # print(res)
+    # # print('您的账户余额为{0}, 等级为{1}, 批量取号数为{2}, 用户类型为{3}'.format(info[1], info[2], info[3], info[4]))
+    # user_info = '您的账户余额为{0}, 可提现余额为{1}'.format(info[0], info[1])
+    user_info = '您的账户余额为{0}, 可提现余额为{1}'.format(11, 1)
 
 
 # 获取验证码
@@ -231,10 +343,14 @@ def getMessage(Token, sid, phone_num):
         i += 1
         res = requests.get(url)
         res.encoding = res.apparent_encoding
+        text1.config(state=tk.NORMAL)
         text1.insert(tk.END, msg_get_info)
         text1.insert(tk.END, '\n')
+        text1.config(state=tk.DISABLED)
         time.sleep(3)
+        text1.config(state=tk.NORMAL)
         text1.delete(2.0, 3.0)
+        text1.config(state=tk.DISABLED)
     else:
         if res.text.split("|")[0] == '0':
             tkinter.messagebox.showwarning(res.text.split("|")[1])
@@ -246,7 +362,7 @@ def getMessage(Token, sid, phone_num):
 def first():
     top = tk.Tk()
     top.geometry("960x650")
-    top.title("阿里鸽鸽 version 2.2 beta版")
+    top.title("阿里鸽鸽 version 2.3 beta版")
     # 用户登录接码码 返回值token
     Token = loginIn()[1]
     # 设置进程数，无效已废弃使用
@@ -258,12 +374,20 @@ def first():
     # 主要功能的回调函数
     def helloCallBack():
 
+        if sid == '':
+            tkinter.messagebox.showwarning('警告', '尚未选择项目，请选择项目！')
+            return 0
+
+        text1.config(state=tk.NORMAL)
+        text2.config(state=tk.NORMAL)
         text1.delete(1.0, 3.0)
         text2.delete(1.0, 'end')
         text1.insert(tk.CURRENT, '您的验证码相关信息如下：\n')
         text2.insert(tk.CURRENT, '给您提供的手机号为：\n')
         text1.update()
         text2.update()
+        text1.config(state=tk.DISABLED)
+        text2.config(state=tk.DISABLED)
 
         if threading.active_count() > 2:
             # 如果多次获取，则结束上一次获取，以最新的获取为准
@@ -280,6 +404,7 @@ def first():
             phone_num = getNumber(Token, sid)
             # ph_num = phone_num
             if phone_num != '未获取到号码':
+                text2.config(state=tk.NORMAL)
                 text2.insert(tk.END, phone_num)
                 text2.insert(tk.END, '\n')
             # else:
@@ -292,12 +417,15 @@ def first():
             operator_info = json.loads(html_info)['response'][phone_num]['location']
             # print('给您提供的手机号为:{0}, 运营商为:{1}'.format(phone_num, operator_info))
             text2.insert(tk.END, operator_info)
+            text2.config(state=tk.DISABLED)
 
             # 获取验证码
             msg_info = getMessage(Token, sid, phone_num)
             if msg_info:
+                text1.config(state=tk.NORMAL)
                 text1.insert(tk.END, msg_info)
                 text1.update()
+                text1.config(state=tk.DISABLED)
                 # 扣费后更新用户信息
                 getSummary(Token)
                 fm2.titleLabel['text'] = user_info
@@ -305,18 +433,30 @@ def first():
             #     print("验证码：", code)
             a = a + 1
 
+    # 搜索项目相关函数
+    def item():
+        if Item_search.count < 1:
+            # 如果误操作开启多个弹窗，则不会开启多个弹窗
+            new_item = Item_search()
+            top.wait_window(new_item)  # 这一句很重要！！！
+        # print(sid)
+
     # 释放手机号的回调函数
     def release():
         phone_pat = re.match(r"^1[3456789]\d{9}$", text2.get('2.0', '3.0'))
         if phone_pat:
             if threading.active_count() > 2:
                 stop_thread(threading.enumerate()[-2])
+            text1.config(state=tk.NORMAL)
+            text2.config(state=tk.NORMAL)
             text1.delete(1.0, 3.0)
             text2.delete(1.0, 'end')
             text1.insert(tk.CURRENT, '您的验证码相关信息如下：\n')
             text2.insert(tk.CURRENT, '给您提供的手机号为：\n')
             text1.update()
             text2.update()
+            text1.config(state=tk.DISABLED)
+            text2.config(state=tk.DISABLED)
             o_code = cancelAllRecv(sid, phone_num, Token)
             # time.sleep(2)
             if o_code[0] == '1':
@@ -352,7 +492,7 @@ def first():
 
     # Frame
     fm1 = tk.Frame(top, bg='black')
-    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 2.2版", font=('微软雅黑', 30), fg="white", bg='black')
+    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 2.3版", font=('微软雅黑', 30), fg="white", bg='black')
     fm1.titleLabel.pack()
     fm1.pack(side=tk.TOP, expand=tk.YES, fill='x', pady=5)
 
@@ -372,7 +512,7 @@ def first():
 
     # 创建下拉菜单
     cmb_1 = ttk.Combobox(grid_a)
-    cmb_1.grid(row=0, column=1, pady=10, padx=4)
+    cmb_1.grid(row=0, column=2, pady=10, padx=4)
     # 设置下拉菜单中的值
     cmb_1['value'] = ('自行选择地区', '随机生成')
     # 设置默认值，即默认下拉框中的内容
@@ -402,7 +542,6 @@ def first():
             # 文本框相关
             m_list.delete(0, tk.END)
             with open('./dataset/city_sorted.txt', 'r', encoding='gbk') as f1:
-                # temp_list = ['南京', '北京', '乌鲁木齐', 'hello Miss4', 'hello Miss5', 'hello Miss6']
                 temp_list = f1.readlines()
             for item in temp_list:
                 # 去掉换行符
@@ -486,15 +625,21 @@ def first():
     text2 = tk.Text(grid_b, width=30, height=5)
     text2.insert(tk.CURRENT, '给您提供的手机号为：\n')
     text2.grid(row=2, column=0, padx=10)
+    text2.config(state=tk.DISABLED)
 
     text1 = tk.Text(grid_b, width=70, height=5)
     text1.insert(tk.CURRENT, '您的验证码相关信息如下：\n')
     text1.grid(row=2, column=1, padx=10)
+    text1.config(state=tk.DISABLED)
 
 
     button1 = tk.Button(grid_a, text="憨憨，准备接码！！！", command=lambda: thread_it(helloCallBack), font=('微软雅黑', 12),
                         width=20, height=2, bg="yellow")
-    button1.grid(row=0, column=0, padx=20)
+    button1.grid(row=0, column=1, padx=20)
+
+    button3 = tk.Button(grid_a, text="憨憨，选择项目！！！", command=lambda: thread_it(item), font=('微软雅黑', 12),
+                        width=20, height=2, bg="yellow")
+    button3.grid(row=0, column=0, padx=20)
 
 
     button2 = tk.Button(grid_c, text="憨憨，释放手机号吗？？？", command=lambda: thread_it(release), font=('微软雅黑', 12),
@@ -512,6 +657,6 @@ def first():
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("阿里鸽鸽 version 2.2 beta版 用户登录")
+    root.title("阿里鸽鸽 version 2.3 beta版 用户登录")
     app = Reg(root)
     root.mainloop()
