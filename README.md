@@ -73,7 +73,8 @@
  
 ## prerequisite:
 
-pip install tkinter
+* pip install tkinter
+* pip install requests
 
 原phone package因不准确不再使用
  
