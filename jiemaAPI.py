@@ -686,19 +686,19 @@ def first():
     text4.config(state=tk.DISABLED, highlightbackground='black')
 
     button1 = tk.Button(row1, text="憨憨，选择项目！！！", command=lambda: thread_it(item), font=('微软雅黑', 12),
-                        width=20, height=2, bg="yellow")
+                        width=30, height=2, bg="yellow")
     button1.grid(row=0, column=0, padx=20, pady=30)
 
     button2 = tk.Button(row2, text="憨憨，选择手机号地区！！！", command=lambda: thread_it(area), font=('微软雅黑', 12),
-                        width=20, height=2, bg="yellow")
+                        width=30, height=2, bg="yellow")
     button2.grid(row=1, column=0, padx=20, pady=30)
 
     button3 = tk.Button(row3, text="憨憨，准备接码！！！", command=lambda: thread_it(main_function), font=('微软雅黑', 12),
-                        width=20, height=3, bg="yellow")
+                        width=30, height=3, bg="yellow")
     button3.grid(row=2, column=0, padx=20, pady=30)
 
     button4 = tk.Button(row4, text="憨憨，释放手机号！！！", command=lambda: thread_it(release), font=('微软雅黑', 12),
-                        width=20, height=2, bg="yellow")
+                        width=30, height=2, bg="yellow")
     button4.grid(row=3, column=0, padx=20, pady=30)
 
     # 底部frame,实时显示用户余额
