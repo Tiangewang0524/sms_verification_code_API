@@ -10,6 +10,23 @@ SMS_receive()  | 主要功能函数：接收验证码。
 release_phone()  | 释放手机号，用于重新接收号码。（收不到验证码或其他原因）
 show_userinfo()  | 显示用户的账户余额等信息。
 
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/login.png)
+
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/item_dialog_selection.png)
+
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/item_search.png)
+
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/area_diglog_selection.png)
+
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/random_area_waitSMS.png)
+
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/main_interface.png)
+
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/waitSMS_click.png)
+
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/waitSMS_interface.png)
+
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/release_phone.png)
 
 ## 更新历史：
 3.0
