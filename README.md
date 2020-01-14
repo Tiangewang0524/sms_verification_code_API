@@ -55,13 +55,13 @@ show_userinfo()  | 显示用户的账户余额等信息。
 * 区域选择界面
 <img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/area_diglog_selection.png" width="40%">
 
-* 随机生成地区界面
-<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/random_area_waitSMS.png" width="50%">
-
 * 等待接码页面
 <img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/waitSMS_click.png" width="50%">
 
-* 正在接码页面（分配江苏地区手机号）
+* 随机生成地区接码界面
+<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/random_area_waitSMS.png" width="50%">
+
+* 接码页面（分配江苏地区手机号）
 <img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/waitSMS_interface.png" width="50%">
 
 * 释放手机号用于新手机号接码
