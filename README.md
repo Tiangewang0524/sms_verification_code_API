@@ -58,11 +58,11 @@ show_userinfo()  | 显示用户的账户余额等信息。
 * 等待接码页面
 <img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/waitSMS_click.png" width="50%">
 
-* 随机生成地区接码界面
-<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/random_area_waitSMS.png" width="50%">
-
 * 接码页面（分配江苏地区手机号）
 <img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/waitSMS_interface.png" width="50%">
+
+* 随机生成地区接码界面
+<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/random_area_waitSMS.png" width="50%">
 
 * 释放手机号用于新手机号接码
 <img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/release_phone.png" width="50%">
@@ -125,7 +125,7 @@ show_userinfo()  | 显示用户的账户余额等信息。
 * 获取完可点击释放账号。
 * 账号使用完即自动进入服务器黑名单，该app内不会再次使用。
 
-### prerequisite:
+#### prerequisite:
 
 * pip install tkinter
 * pip install requests
