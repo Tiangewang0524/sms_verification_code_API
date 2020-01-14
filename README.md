@@ -23,6 +23,7 @@
 
 
 `with open('.\dataset\province.txt', 'r', encoding='gbk') as f1:`
+
 ## 功能介绍：
 Function name  | Description
 ------------- | -------------
@@ -36,7 +37,7 @@ show_userinfo()  | 显示用户的账户余额等信息。
 #### 界面预览：
 
 * 登录界面
-![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/login.png)
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/login.png 100*70)
 
 * 主界面
 ![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/main_interface.png)
