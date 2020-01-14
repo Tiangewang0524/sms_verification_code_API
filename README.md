@@ -94,7 +94,6 @@ show_userinfo()  | 显示用户的账户余额等信息。
 * 增加了省和城市的选择，增加了随机选择号码库任意地区的号码，号码的选择更多了。
 * 增加了登录界面。
 * 整合成exe文件，可以直接使用。
-![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/raw/master/dataset/capture2.JPG)
 
 
 1.3
