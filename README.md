@@ -37,7 +37,9 @@ show_userinfo()  | 显示用户的账户余额等信息。
 #### 界面预览：
 
 * 登录界面
-![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/login.png){:height="70" width="100"}
+
+
+![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/login.png)
 
 * 主界面
 ![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/main_interface.png)
