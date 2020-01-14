@@ -43,33 +43,29 @@ show_userinfo()  | 显示用户的账户余额等信息。
 
 
 * 主界面
-<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/main_interface.png" width="20%">
+<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/main_interface.png" width="40%">
 
 
 * 项目搜索弹窗界面
-<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/item_dialog_selection.png" width="20%">
-
+<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/item_dialog_selection.png" width="30%">
 
 在搜索框中输入你要接收验证码的项目，支持模糊搜索，在结果中选择并确定即可。
-<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/item_search.png" width="20%">
+<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/item_search.png" width="40%">
 
 * 区域选择界面
-![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/area_diglog_selection.png)
-可自行选择地区，也可选择随机归属地。确定后在主界面会显示地区名。
-
-<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/item_dialog_selection.png" width="20%">
+<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/area_diglog_selection.png" width="30%">
 
 * 随机生成地区界面
-![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/random_area_waitSMS.png)
+<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/random_area_waitSMS.png" width="30%">
 
 * 等待接码页面
-![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/waitSMS_click.png)
+<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/waitSMS_click.png" width="40%">
 
 * 正在接码页面（分配江苏地区手机号）
-![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/waitSMS_interface.png)
+<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/waitSMS_interface.png" width="40%">
 
 * 释放手机号用于新手机号接码
-![Image text](https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/release_phone.png)
+<img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/release_phone.png" width="40%">
 
 ## 更新历史：
 3.0
