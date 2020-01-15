@@ -10,7 +10,6 @@ import json
 import threading
 import inspect
 import ctypes
-import webbrowser
 from urllib.parse import quote
 
 
@@ -68,7 +67,7 @@ class Reg(tk.Frame):
         self.button = tk.Button(self.frame, text="登录", command=lambda: self.Submit(master))
         # self.button.place(x=100, y=46)
         self.button.grid(row=2, column=1, sticky=tk.W, ipadx=20)
-        self.button2 = tk.Button(self.frame, text="注册", command=self.Register)
+        self.button2 = tk.Button(self.frame, text="注册", command=lambda: self.Register(master))
         self.button2.grid(row=2, column=1, sticky=tk.E, ipadx=20)
 
     def Submit(self, master):
@@ -83,8 +82,152 @@ class Reg(tk.Frame):
         else:
             tkinter.messagebox.showinfo('通知', '密码错误，请重新登陆！')
 
-    def Register(self):
-        webbrowser.open("http://www.sfoxer.com/reg.html", new=0)
+    def Register(self, master):
+        if UserRegister.count < 1:
+            # 如果误操作开启多个弹窗，则不会开启多个弹窗
+            new_user = UserRegister()
+            master.wait_window(new_user)
+            UserRegister.count = 0
+
+
+# 新用户注册类
+class UserRegister(tk.Toplevel):
+    count = 0
+
+    def __init__(self):
+        super().__init__()
+        self.title("阿里鸽鸽 version 3.1 beta版 注册")
+        UserRegister.count += 1
+
+        # 弹窗界面
+
+        # 第一行
+        row1 = tk.Frame(self)
+        row1.pack(fill="x")
+        tk.Label(row1, text="用户名:", width=15).pack(side=tk.LEFT)
+        self.reg_user = tk.StringVar()
+        tk.Entry(row1, textvariable=self.reg_user, width=20).pack(side=tk.LEFT)
+
+        # 第二行
+        row2 = tk.Frame(self)
+        row2.pack(fill="x")
+        tk.Label(row2, text="密码:", width=15).pack(side=tk.LEFT)
+        self.reg_pwd = tk.StringVar()
+        tk.Entry(row2, textvariable=self.reg_pwd, width=20, show="*").pack(side=tk.LEFT)
+
+        # 第三行
+        row3 = tk.Frame(self)
+        row3.pack(fill="x")
+        tk.Label(row3, text="确认密码:", width=15).pack(side=tk.LEFT)
+        self.reg_repwd = tk.StringVar()
+        tk.Entry(row3, textvariable=self.reg_repwd, width=20, show="*").pack(side=tk.LEFT)
+
+        # 第四行
+        row4 = tk.Frame(self)
+        row4.pack(fill="x")
+        tk.Label(row4, text="联系QQ:", width=15).pack(side=tk.LEFT)
+        self.reg_qq = tk.StringVar()
+        tk.Entry(row4, textvariable=self.reg_qq, width=20).pack(side=tk.LEFT)
+
+        # 第五行
+        row5 = tk.Frame(self)
+        row5.pack(fill="x")
+        tk.Label(row5, text="真实姓名:", width=15).pack(side=tk.LEFT)
+        self.reg_realname = tk.StringVar()
+        tk.Entry(row5, textvariable=self.reg_realname, width=20).pack(side=tk.LEFT)
+
+        # 第六行
+        row6 = tk.Frame(self)
+        row6.pack(fill="x")
+        tk.Label(row6, text="提现支付宝:", width=15).pack(side=tk.LEFT)
+        self.reg_alipay = tk.StringVar()
+        tk.Entry(row6, textvariable=self.reg_alipay, width=20).pack(side=tk.LEFT)
+
+        # 第七行
+        row7 = tk.Frame(self)
+        row7.pack(fill="x")
+        tk.Label(row7, text="安全问题:", width=15).pack(side=tk.LEFT)
+        self.cmb = ttk.Combobox(row7)
+        self.cmb.pack(side=tk.LEFT)
+        self.cmb['value'] = ('你初中的老师叫什么？', '你喜欢的颜色？', '你小学的学号是什么？', '你的梦想是什么？')
+        self.cmb.current(0)
+
+        # 第八行
+        row8 = tk.Frame(self)
+        row8.pack(fill="x")
+        tk.Label(row8, text="安全答案:", width=15).pack(side=tk.LEFT)
+        self.reg_ans = tk.StringVar()
+        tk.Entry(row8, textvariable=self.reg_ans, width=20).pack(side=tk.LEFT)
+
+        # 第九行
+        row9 = tk.Frame(self)
+        row9.pack(fill="x")
+        tk.Label(row9, text="推荐人:", width=15).pack(side=tk.LEFT)
+        self.reg_referee = tk.StringVar()
+        tk.Entry(row9, textvariable=self.reg_referee, width=20).pack(side=tk.LEFT)
+
+        # 第十行
+        row10 = tk.Frame(self)
+        row10.pack(fill="x")
+        tk.Button(row10, text="注册", command=self.register, width=10).pack(side=tk.RIGHT)
+
+    def register(self):
+        """
+        注册必选参数：
+        [1] reg_user 用户名
+        [2] reg_pwd 密码
+        [3] reg_repwd 二次确认密码
+        [4] reg_qq 注册QQ
+        [5] reg_realname 真实姓名
+        [6] reg_alipay 支付宝账号
+        [7] reg_quest 4个安全问题中的一个
+        [8] reg_ans 安全答案
+
+        可选参数：
+        [1] reg_referee 推荐人id，默认为空
+        """
+
+        """
+        成功返回：注册成功
+        失败返回：注册失败
+        """
+
+        # 判断支付宝账号是不是合法，即是否为手机号或者邮箱
+        judge = re.match(r"^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$", self.reg_alipay.get())
+        judge2 = re.match(r"^[1]([3-9])[0-9]{9}$", self.reg_alipay.get())
+
+        # 用URLencode给安全问题编码
+        reg_quest = self.cmb.get()
+        reg_quest = quote(reg_quest)
+
+        if self.reg_pwd.get() != self.reg_repwd.get():
+            tkinter.messagebox.showinfo('通知', '两次密码不一致！')
+        elif not judge and not judge2:
+            tkinter.messagebox.showinfo('通知', '输入的支付宝账号不合法！')
+        else:
+            url = "http://115.231.220.181:82/ZC/username={0}&password={1}&password1={2}&QQ={3}&Fullname={4}&" \
+                  "account={5}&Referee={6}&problem={7}&Answer={8}" \
+                  "&type=1".format(self.reg_user.get(), self.reg_pwd.get(), self.reg_repwd.get(), self.reg_qq.get(),
+                                   self.reg_realname.get(), self.reg_alipay.get(), self.reg_referee.get(),
+                                   reg_quest, self.reg_ans.get())
+            res = requests.get(url)
+            res.encoding = res.apparent_encoding
+            content = res.text
+
+            if content == '注册成功' or content == '×¢²á³É¹¦':
+                tkinter.messagebox.showinfo('通知', '注册成功！')
+                self.close()
+            elif content == '用户名已被使用':
+                tkinter.messagebox.showinfo('通知', '用户名已被使用！')
+            elif content == '用户名长度少于6位。':
+                tkinter.messagebox.showinfo('通知', '用户名长度少于6位！')
+            elif content == '密码长度少于6位。':
+                tkinter.messagebox.showinfo('通知', '密码长度少于6位！')
+            else:
+                tkinter.messagebox.showinfo('通知', '由于网络，服务器响应错误等原因注册失败，请稍候再试！')
+
+    def close(self):
+        self.destroy()
 
 
 # 项目搜索选择类（所有弹窗类可这么写）
@@ -93,7 +236,7 @@ class ItemSearch(tk.Toplevel):
 
     def __init__(self):
         super().__init__()
-        self.title("阿里鸽鸽 version 3.0 beta版 项目搜索")
+        self.title("阿里鸽鸽 version 3.1 beta版 项目搜索")
         ItemSearch.count += 1
 
         # 弹窗界面
@@ -127,7 +270,7 @@ class ItemSearch(tk.Toplevel):
                 sid = re.match(r"^\d+", sid_selection).group()
 
                 if sid:
-                    button.grid(row=4, column=2, sticky=tk.E)
+                    button.grid(row=4, column=2, sticky=tk.E, ipadx=15)
                     button_list.append(button)
             except:
                 for button in button_list:
@@ -171,7 +314,7 @@ class AreaSelect(tk.Toplevel):
 
     def __init__(self):
         super().__init__()
-        self.title("阿里鸽鸽 version 3.0 beta版 区域选择")
+        self.title("阿里鸽鸽 version 3.1 beta版 区域选择")
         AreaSelect.count += 1
 
         # 弹窗界面
@@ -461,6 +604,7 @@ def getSummary(Token):
     # # print('您的账户余额为{0}, 等级为{1}, 批量取号数为{2}, 用户类型为{3}'.format(info[1], info[2], info[3], info[4]))
     user_info = '您的账户余额为{0}, 可提现余额为{1}'.format(info[0], info[1])
     # user_info = '您的账户余额为{0}, 可提现余额为{1}'.format(11, 1)
+    return info
 
 
 # 获取验证码
@@ -505,13 +649,13 @@ def first():
     top.minsize(900, 550)  # 最小尺寸
     top.maxsize(900, 550)  # 最大尺寸
 
-    top.title("阿里鸽鸽 version 3.0 beta版")
+    top.title("阿里鸽鸽 version 3.1 beta版")
     # 用户登录接码码 返回值token
     Token = loginIn()[1]
 
     global text1, phone_num
     # 界面用户信息
-    getSummary(Token)
+    info = getSummary(Token)
 
     # 主要功能的回调函数
     def main_function():
@@ -537,38 +681,41 @@ def first():
 
         global phone_num, msg_info
         a = 1
-        # 如需获取多个手机号 请将循环条件改为 a < 要获取的手机号数量+1
-        while a < 2:
-            time.sleep(1)
-            # 取手机号  return 手机号
-            phone_num = getNumber(Token, sid)
+        if info[0] != '0':
+            # 如需获取多个手机号 请将循环条件改为 a < 要获取的手机号数量+1
+            while a < 2:
+                time.sleep(1)
+                # 取手机号  return 手机号
+                phone_num = getNumber(Token, sid)
 
-            if phone_num != '没有可用号码':
-                text2.config(state=tk.NORMAL)
-                text2.insert(tk.END, phone_num)
-                text2.insert(tk.END, '\n')
+                if phone_num != '没有可用号码':
+                    text2.config(state=tk.NORMAL)
+                    text2.insert(tk.END, phone_num)
+                    text2.insert(tk.END, '\n')
 
-                # 检查运营商信息
-                temp_url = 'http://mobsec-dianhua.baidu.com/dianhua_api/open/location?tel=' + str(phone_num)
-                html_info = requests.get(temp_url).text
-                operator_info = json.loads(html_info)['response'][phone_num]['location']
-                # print('给您提供的手机号为:{0}, 运营商为:{1}'.format(phone_num, operator_info))
-                text2.insert(tk.END, operator_info)
-                text2.config(state=tk.DISABLED)
+                    # 检查运营商信息
+                    temp_url = 'http://mobsec-dianhua.baidu.com/dianhua_api/open/location?tel=' + str(phone_num)
+                    html_info = requests.get(temp_url).text
+                    operator_info = json.loads(html_info)['response'][phone_num]['location']
+                    # print('给您提供的手机号为:{0}, 运营商为:{1}'.format(phone_num, operator_info))
+                    text2.insert(tk.END, operator_info)
+                    text2.config(state=tk.DISABLED)
 
-                # 获取验证码
-                msg_info = getMessage(Token, sid, phone_num)
-                if msg_info:
-                    text1.config(state=tk.NORMAL)
-                    text1.insert(tk.END, msg_info)
-                    text1.update()
-                    text1.config(state=tk.DISABLED)
-                    # 扣费后更新用户信息
-                    getSummary(Token)
-                    fm2.titleLabel['text'] = user_info
-                # if code:
-                #     print("验证码：", code)
-            a = a + 1
+                    # 获取验证码
+                    msg_info = getMessage(Token, sid, phone_num)
+                    if msg_info:
+                        text1.config(state=tk.NORMAL)
+                        text1.insert(tk.END, msg_info)
+                        text1.update()
+                        text1.config(state=tk.DISABLED)
+                        # 扣费后更新用户信息
+                        getSummary(Token)
+                        fm2.titleLabel['text'] = user_info
+                    # if code:
+                    #     print("验证码：", code)
+                a = a + 1
+        else:
+            tkinter.messagebox.showwarning('警告', '余额不足，请充值！')
 
     # 搜索项目相关函数
     def item():
@@ -651,7 +798,7 @@ def first():
 
     # Frame
     fm1 = tk.Frame(top, bg='black')
-    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 版本号: 3.0 ", font=('微软雅黑', 30), fg="white", bg='black')
+    fm1.titleLabel = tk.Label(fm1, text="阿里鸽鸽接码客户端 版本号: 3.1 ", font=('微软雅黑', 30), fg="white", bg='black')
     fm1.titleLabel.pack()
     fm1.pack(side=tk.TOP, fill='x', pady=5)
 
@@ -689,7 +836,7 @@ def first():
                         width=30, height=2, bg="yellow")
     button1.grid(row=0, column=0, padx=20, pady=30)
 
-    button2 = tk.Button(row2, text="憨憨，选择手机号地区！！！", command=lambda: thread_it(area), font=('微软雅黑', 12),
+    button2 = tk.Button(row2, text="憨憨，选择归属地！！！", command=lambda: thread_it(area), font=('微软雅黑', 12),
                         width=30, height=2, bg="yellow")
     button2.grid(row=1, column=0, padx=20, pady=30)
 
@@ -711,8 +858,9 @@ def first():
 
 
 if __name__ == "__main__":
+
     root = tk.Tk()
-    root.title("阿里鸽鸽 version 3.0 beta版 用户登录")
+    root.title("阿里鸽鸽 version 3.1 beta版 用户登录")
 
     # 锁死窗口大小
     root.minsize(230, 90)  # 最小尺寸
