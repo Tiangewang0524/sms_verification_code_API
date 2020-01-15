@@ -1,7 +1,7 @@
 # 短信验证码接收API
 #### 目前最新版本为3.1版:smile:	
 #### Windows用户如需使用源代码请将：
-* 221行 
+* 364行 
 
 
 `with open('./dataset/city_sorted.txt', 'r', encoding='gbk') as f1:`
@@ -13,7 +13,7 @@
 `with open('.\dataset\city_sorted.txt', 'r', encoding='gbk') as f1:`
 
 
-* 241行 
+* 384行 
 
 
 `with open('./dataset/province.txt', 'r', encoding='gbk') as f1:`
