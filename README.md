@@ -51,8 +51,8 @@ show_userinfo()  | 显示用户的账户余额等信息。
 * 项目搜索弹窗界面
 <img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/item_dialog_selection.png" width="40%">
 
-    + 在搜索框中输入你要接收验证码的项目，支持模糊搜索，在结果中选择并确定即可。
-    <img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/item_search.png" width="50%">
+   + 在搜索框中输入你要接收验证码的项目，支持模糊搜索，在结果中选择并确定即可。
+   + <img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/item_search.png" width="50%">
 
 * 区域选择界面
 <img src="https://github.com/Tiangewang0524/sms_verification_code_API/blob/master/dataset/SMS/area_diglog_selection.png" width="40%">
