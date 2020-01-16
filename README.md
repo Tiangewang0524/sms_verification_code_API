@@ -29,6 +29,7 @@
 Function name  | Description
 ------------- | -------------
 login()  | 输入用户名和密码登录并获取token。
+register()  | 填写新用户信息并注册成为新用户用于登录。
 item_selection() | 选取需要接收验证码的项目。
 area_selection()  | 选取手机号的归属地。（可能由于号码库未收录该地区而无法满足号码来自所选地点）
 SMS_receive()  | 主要功能函数：接收验证码。
